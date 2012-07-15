@@ -48,7 +48,9 @@
     return self;
 }
 
--(void)loginWithCallbackURL:(NSURL *)url handler:(void (^)(ETWAccount *))handler{
+-(void)loginWithCallbackURL:(NSURL *)url
+	   authorizationHandler:(void (^)(NSURL *url, ETWTwitterLoginVerifier verifier))authHandler
+					handler:(void (^)(ETWAccount *))handler{
     ETWRequest *request = [[self.requestClass alloc] init];
     request.method = ETWRequestMethodPOST;
     request.type = ETWRequestTypeOAuth;
@@ -63,28 +65,26 @@
         NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"https://api.twitter.com/oauth/authorize?oauth_token=%@", response[@"oauth_token"]]];
         NSLog(@"Authorize: %@",url);
         
-        int pin = 0;
-        // break here and set pin
-        
-        ETWRequest *accessTokenRequest = [[self.requestClass alloc] init];
-        accessTokenRequest.method = ETWRequestMethodPOST;
-        accessTokenRequest.type = ETWRequestTypeOAuth;
-        accessTokenRequest.APIMethod = @"access_token";
-        accessTokenRequest.app = self;
-        accessTokenRequest.parameters = @{ @"oauth_verifier" : [NSString stringWithFormat:@"%i", pin], @"oauth_token" : response[@"oauth_token"] };
-        [accessTokenRequest performOnQueue:opQueue handler:^(NSDictionary *response, NSError *error, ETWRequest *request) {
-            NSLog(@"Access token! %@", response);
-            if(error){
-                NSLog(@"Error obtaining access token: %@", error);
-                handler(nil);
-                return;
-            }
-            
-            ETWAccount *account = [[self.accountClass alloc] initWithTokenData:response];
-            [self addAccount:account];
-            handler(account);
-        }];
-        
+		authHandler(url, ^(NSString *verifier){
+			ETWRequest *accessTokenRequest = [[self.requestClass alloc] init];
+			accessTokenRequest.method = ETWRequestMethodPOST;
+			accessTokenRequest.type = ETWRequestTypeOAuth;
+			accessTokenRequest.APIMethod = @"access_token";
+			accessTokenRequest.app = self;
+			accessTokenRequest.parameters = @{ @"oauth_verifier" : verifier, @"oauth_token" : response[@"oauth_token"] };
+			[accessTokenRequest performOnQueue:opQueue handler:^(NSDictionary *response, NSError *error, ETWRequest *request) {
+				NSLog(@"Access token! %@", response);
+				if(error){
+					NSLog(@"Error obtaining access token: %@", error);
+					handler(nil);
+					return;
+				}
+				
+				ETWAccount *account = [[self.accountClass alloc] initWithTokenData:response];
+				[self addAccount:account];
+				handler(account);
+			}];
+		});
     }];
 }
 

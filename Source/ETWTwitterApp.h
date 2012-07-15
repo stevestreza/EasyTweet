@@ -28,6 +28,8 @@
 
 @class ETWAccount;
 
+typedef void(^ETWTwitterLoginVerifier)(NSString *verifier);
+
 @interface ETWTwitterApp : NSObject
 
 @property (nonatomic, copy) NSString *consumerKey;
@@ -37,7 +39,9 @@
 
 @property (nonatomic, readonly) NSOperationQueue *operationQueue;
 
--(void)loginWithCallbackURL:(NSURL *)url handler:(void (^)(ETWAccount *))handler;
+-(void)loginWithCallbackURL:(NSURL *)url
+	   authorizationHandler:(void (^)(NSURL *url, ETWTwitterLoginVerifier verifier))authHandler
+					handler:(void (^)(ETWAccount *))handler;
 
 -(void)addAccount:(ETWAccount *)account;
 
