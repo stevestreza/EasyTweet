@@ -45,6 +45,8 @@ typedef void(^ETWTwitterLoginVerifier)(NSString *verifier);
 
 -(void)addAccount:(ETWAccount *)account;
 
++(ETWTwitterApp *)appWithConsumerKey:(NSString *)key;
+
 // advanced use only
 @property (nonatomic, strong) Class accountClass; // defaults to ETWAccount, override in subclasses if needed
 @property (nonatomic, strong) Class requestClass; // defaults to ETWRequest, override in subclasses if needed

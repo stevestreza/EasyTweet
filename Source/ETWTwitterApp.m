@@ -41,6 +41,27 @@
 
 @implementation ETWTwitterApp
 
+static NSMutableDictionary *sAppsByConsumerKey = NULL;
+
++(ETWTwitterApp *)appWithConsumerKey:(NSString *)key{
+	return sAppsByConsumerKey[key];
+}
+
++(void)registerConsumerKeyOfApp:(ETWTwitterApp *)app{
+	if(!app.consumerKey) return;
+	
+	if(!sAppsByConsumerKey){
+		sAppsByConsumerKey = [NSMutableDictionary dictionary];
+	}
+	[sAppsByConsumerKey setObject:app forKey:app.consumerKey];
+}
+
++(void)deregisterConsumerKeyOfApp:(ETWTwitterApp *)app{
+	if(sAppsByConsumerKey && app.consumerKey){
+		[sAppsByConsumerKey removeObjectForKey:app.consumerKey];
+	}
+}
+
 -(id)init{
     if(self = [super init]){
         _operationQueue = [[NSOperationQueue alloc] init];
@@ -71,6 +92,7 @@
 			accessTokenRequest.type = ETWRequestTypeOAuth;
 			accessTokenRequest.APIMethod = @"access_token";
 			accessTokenRequest.app = self;
+			accessTokenRequest.secure = YES;
 			accessTokenRequest.parameters = @{ @"oauth_verifier" : verifier, @"oauth_token" : response[@"oauth_token"] };
 			[accessTokenRequest performOnQueue:opQueue handler:^(NSDictionary *response, NSError *error, ETWRequest *request) {
 				NSLog(@"Access token! %@", response);
@@ -111,6 +133,12 @@
         _requestClass = [ETWRequest class];
     }
     return _requestClass;
+}
+
+-(void)setConsumerKey:(NSString *)consumerKey{
+	[[self class] deregisterConsumerKeyOfApp:self];
+	_consumerKey = consumerKey;
+	[[self class] registerConsumerKeyOfApp:self];
 }
 
 @end

@@ -25,6 +25,7 @@
 //
 
 #import "ETWAccount.h"
+#import "ETWTwitterApp.h"
 
 @implementation ETWAccount
 
@@ -43,6 +44,7 @@
     [aCoder encodeObject:_username forKey:@"username"];
     [aCoder encodeObject:_accessTokenKey forKey:@"accessTokenKey"];
     [aCoder encodeObject:_accessTokenSecret forKey:@"accessTokenSecret"];
+	[aCoder encodeObject:self.app.consumerKey forKey:@"appConsumerKey"];
 }
 
 - (id)initWithCoder:(NSCoder *)aDecoder{
@@ -51,6 +53,7 @@
         _username = [aDecoder decodeObjectForKey:@"username"];
         _accessTokenKey = [aDecoder decodeObjectForKey:@"accessTokenKey"];
         _accessTokenSecret = [aDecoder decodeObjectForKey:@"accessTokenSecret"];
+		self.app = [ETWTwitterApp appWithConsumerKey:[aDecoder decodeObjectForKey:@"appConsumerKey"]];
     }
     return self;
 }
